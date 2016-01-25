@@ -8,12 +8,19 @@ import android.telephony.TelephonyManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import com.loopj.android.http.*;
-import org.json.*;
+import android.widget.Toast;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import cz.msebera.android.httpclient.Header;
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 /**
  * Created by James on 08/01/2016.
@@ -22,61 +29,76 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     Button btLogin;
     EditText etEmail, etPassword;
-    TelephonyManager telephonyManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+    TelephonyManager telephonyManager;
+    OkHttpClient client;
+    UserLocalStore userLocalStore;
 
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        telephonyManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+        client = new OkHttpClient();
         etEmail = (EditText) findViewById(R.id.etEmail);
         etPassword = (EditText) findViewById(R.id.etPassword);
         btLogin = (Button) findViewById(R.id.btLogin);
 
         btLogin.setOnClickListener(this);
+        userLocalStore = new UserLocalStore(this);
     }
+
 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
             //if login button is clicked
             case R.id.btLogin:
-                RequestParams params = new RequestParams();
-                params.add("email", etEmail.toString());
-                params.add("password", etPassword.toString());
-                params.add("password", telephonyManager.getDeviceId());
-                HttpClient.get("Account", params, new JsonHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                        // If the response is JSONObject instead of expected JSONArray
-                        //http://loopj.com/android-async-http/
-                        goToMainActivity();
-                    }
+                try {
+                    HttpUrl url = new HttpUrl.Builder()
+                            .scheme("http")
+                            .host("138.91.61.37")
+                            .addPathSegment("AppDashboard")
+                            .addPathSegment("api")
+                            .addPathSegment("Account/")
+                            .addQueryParameter("email", etEmail.getText().toString())
+                            .addQueryParameter("password", etPassword.getText().toString())
+                            .addQueryParameter("imei", telephonyManager.getDeviceId().toString())
+                            .build();
 
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
-                        // Pull out the first event on the public timeline
-                        JSONObject firstEvent = null;
-                        try {
-                            firstEvent = (JSONObject) timeline.get(0);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        String tweetText = null;
-                        try {
-                            tweetText = firstEvent.getString("text");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                        // Do something with the response
-                        System.out.println(tweetText);
-                    }
-
-
-                });
-
+                    doGetRequest(url);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
         }
+    }
+
+    void doGetRequest(HttpUrl url) throws IOException{
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        client.newCall(request)
+                .enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        //Error
+                        String hello = "hello";
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        //Success
+                        String responseData = response.body().string();
+                        try {
+                            JSONObject json = new JSONObject(responseData);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+
     }
 
     private void goToMainActivity() {

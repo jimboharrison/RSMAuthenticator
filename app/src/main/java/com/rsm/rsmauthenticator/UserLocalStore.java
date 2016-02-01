@@ -7,7 +7,7 @@ import android.content.SharedPreferences;
  * Created by James on 25/01/2016.
  */
 public class UserLocalStore {
-    public static final String SP_NAME = "userDetails";
+    public static final String SP_NAME = "RsmUserDetails";
     SharedPreferences userLocalDB;
 
     public UserLocalStore(Context context){
@@ -16,16 +16,16 @@ public class UserLocalStore {
 
     public void StoreUserData(User user){
         SharedPreferences.Editor spEditor = userLocalDB.edit();
-        spEditor.putString("name", user.name);
-        spEditor.putString("email", user.email);
-        spEditor.putString("password", user.password);
+        spEditor.putString("RsmName", user.name);
+        spEditor.putString("RsmEmail", user.email);
+        spEditor.putString("RsmPassword", user.password);
         spEditor.commit();
     }
 
     public User getLoggedInUser(){
-        String name = userLocalDB.getString("name", "");
-        String email = userLocalDB.getString("email", "");
-        String password = userLocalDB.getString("password", "");
+        String name = userLocalDB.getString("RsmName", "");
+        String email = userLocalDB.getString("RsmEmail", "");
+        String password = userLocalDB.getString("RsmPassword", "");
 
         return new User(name, email, password);
     }
@@ -40,6 +40,12 @@ public class UserLocalStore {
         SharedPreferences.Editor spEditor = userLocalDB.edit();
         spEditor.clear();
         spEditor.commit();
+    }
+
+    public boolean IsUserLoggedIn(){
+        if(userLocalDB.getBoolean("loggedIn", false) == true)
+            return true;
+        else return false;
     }
 
 }

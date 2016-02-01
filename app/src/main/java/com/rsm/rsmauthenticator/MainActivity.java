@@ -1,52 +1,81 @@
 package com.rsm.rsmauthenticator;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+
+import java.io.IOException;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    Button btLogout;
+    UserLocalStore userLocalStore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        userLocalStore = new UserLocalStore(this);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        btLogout = (Button) findViewById(R.id.btLogout);
+        btLogout.setOnClickListener(this);
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+    protected void onStart() {
+        super.onStart();
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        if(authenticateUser() == true){
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        }else{
+            startActivity(new Intent(this, LoginActivity.class));
         }
-
-        return super.onOptionsItemSelected(item);
     }
+
+    private boolean authenticateUser() {
+        return userLocalStore.IsUserLoggedIn();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.btLogout:
+                userLocalStore.clearUserData();
+                userLocalStore.SetUserLoggedIn(false);
+                startActivity(new Intent(this, LoginActivity.class));
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(),"Logged Out", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                break;
+        }
+    }
+
+
+
+
+
+
+
+
 }

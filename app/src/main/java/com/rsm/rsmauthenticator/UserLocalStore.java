@@ -19,6 +19,7 @@ public class UserLocalStore {
         spEditor.putString("RsmName", user.name);
         spEditor.putString("RsmEmail", user.email);
         spEditor.putString("RsmPassword", user.password);
+        spEditor.putInt("UserId", user.userId);
         spEditor.commit();
     }
 
@@ -26,8 +27,9 @@ public class UserLocalStore {
         String name = userLocalDB.getString("RsmName", "");
         String email = userLocalDB.getString("RsmEmail", "");
         String password = userLocalDB.getString("RsmPassword", "");
+        Integer userId = userLocalDB.getInt("UserId", Integer.MIN_VALUE);
 
-        return new User(name, email, password);
+        return new User(name, email, password, userId);
     }
 
     public void SetUserLoggedIn(boolean loggedIn){
@@ -43,9 +45,26 @@ public class UserLocalStore {
     }
 
     public boolean IsUserLoggedIn(){
-        if(userLocalDB.getBoolean("loggedIn", false) == true)
-            return true;
-        else return false;
+        return userLocalDB.getBoolean("loggedIn", false) == true;
     }
 
+    public String GetGCMRegId(String propertyRegId) {
+        return userLocalDB.getString(propertyRegId, "");
+    }
+
+    public int GetAppVersion(String propertyAppVersion) {
+        return userLocalDB.getInt(propertyAppVersion, Integer.MIN_VALUE);
+    }
+
+    public void StoreAppVersion(String propertyAppVersion, int appversion) {
+        SharedPreferences.Editor spEditor = userLocalDB.edit();
+        spEditor.putInt(propertyAppVersion, appversion);
+        spEditor.commit();
+    }
+
+    public void StoreGCMRegId(String propertyRegId, String regId) {
+        SharedPreferences.Editor spEditor = userLocalDB.edit();
+        spEditor.putString(propertyRegId, regId);
+        spEditor.commit();
+    }
 }

@@ -33,8 +33,10 @@ import java.net.Authenticator;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -50,26 +52,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     JSONObject jsonResponse;
     String name, email, pass;
     Integer userId;
-
-    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-    public static final String EXTRA_MESSAGE = "message";
-    public static final String PROPERTY_REG_ID = "registration_id";
-    private static final String PROPERTY_APP_VERSION = "appVersion";
-    private final static String TAG = "LaunchActivity";
-
-    protected String SENDER_ID = "540327761504";
-    private GoogleCloudMessaging gcm =null;
-    private String regid = null;
-    private Context context= null;
-
+    String PROJECT_NUMBER = "540327761504";
+    String serverApiHost = "40.87.151.116";
+    GCMClientManager pushClientManager;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        /* TEST*/
-        if (checkPlayServices())
-        {
             Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar);
             setSupportActionBar(myToolbar);
 
@@ -81,8 +71,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
             btLogin.setOnClickListener(this);
             userLocalStore = new UserLocalStore(this);
-        }
-        /* ENDTEST*/
 
     }
 
@@ -94,13 +82,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 try {
                     HttpUrl url = new HttpUrl.Builder()
                             .scheme("http")
-                            .host("138.91.61.37")
+                            .host(serverApiHost)
                             .addPathSegment("AppDashboard")
                             .addPathSegment("api")
                             .addPathSegment("Account/")
                             .addQueryParameter("email", etEmail.getText().toString())
                             .addQueryParameter("password", etPassword.getText().toString())
-                            .addQueryParameter("imei", telephonyManager.getDeviceId().toString())
+                            .addQueryParameter("imei", telephonyManager.getDeviceId())
                             .build();
 
                     doGetRequest(url);
@@ -137,10 +125,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                 public void run() {
                                     etEmail.setText("");
                                     etPassword.setText("");
-                                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(LoginActivity.this);
-                                    dialogBuilder.setMessage(responseData);
-                                    dialogBuilder.setPositiveButton("Ok", null);
-                                    dialogBuilder.show();
+                                    Alertdialog(responseData);
                                 }
                             });
                         } else {
@@ -150,9 +135,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                 email = jsonResponse.getString("Email");
                                 pass = jsonResponse.getString("Password");
                                 userId = jsonResponse.getInt("Id");
-                                CheckGCMRegistration(userId);
+                                User user = new User(name, email, pass, userId);
 
-                                User user = new User(name, email, pass);
+                                boolean regok = RegisterGCMClient(userId);
+
                                 logUserIn(user);
 
                             } catch (JSONException e) {
@@ -163,66 +149,63 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 });
     }
 
-    private void CheckGCMRegistration(Integer userId) {
-        context = getApplicationContext();
-
-        gcm = GoogleCloudMessaging.getInstance(this);
-        regid = getRegistrationId(context);
-
-        if (regid.isEmpty())
-        {
-            registerInBackground();
-
-            saveGCMRegId(userId, regid);
-
-            //now send to my server api to save registration id on current device
-        }
-        else
-        {
-            Log.d(TAG, "No valid Google Play Services APK found.");
-        }
-
+    private void Alertdialog(String responseData) {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(LoginActivity.this);
+        dialogBuilder.setMessage(responseData);
+        dialogBuilder.setPositiveButton("Ok", null);
+        dialogBuilder.show();
     }
 
-    private void saveGCMRegId(Integer userId, String regid) {
+    private boolean RegisterGCMClient(final Integer userId) {
+        pushClientManager = new GCMClientManager(this,PROJECT_NUMBER, userLocalStore);
+        String regId = pushClientManager.registerIfNeeded();
         try {
-            HttpUrl url = new HttpUrl.Builder()
-                    .scheme("http")
-                    .host("138.91.61.37")
-                    .addPathSegment("AppDashboard")
-                    .addPathSegment("api")
-                    .addPathSegment("GCM/")
-                    .addQueryParameter("userId", userId.toString())
-                    .addQueryParameter("regId", regid)
-                    .build();
-
-            doPutRequest(url);
-
+            boolean ok = SendGCMRegIdToServer(regId, userId);
+            if(ok)
+                return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        return false;
     }
 
-     void doPutRequest(HttpUrl url) throws IOException {
+    private boolean SendGCMRegIdToServer(String registrationId, Integer userId) throws IOException {
+        HttpUrl url = new HttpUrl.Builder()
+                .scheme("http")
+                .host(serverApiHost)
+                .addPathSegment("AppDashboard")
+                .addPathSegment("api")
+                .addPathSegment("GCM")
+                .build();
+
+        MediaType JSON
+                = MediaType.parse("application/json; charset=utf-8");
+
+        JSONObject jsonObject = new JSONObject();
+
+        try {
+            jsonObject.put("UserId", userId);
+            jsonObject.put("RegId", registrationId);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        String json = jsonObject.toString();
+
+        RequestBody requestBody = RequestBody.create(JSON, json);
 
         Request request = new Request.Builder()
                 .url(url)
+                .post(requestBody)
                 .build();
-         //need to add some sort of authentication
-        client.newCall(request)
-                .enqueue(new Callback(){
 
-                    @Override
-                    public void onFailure(Call call, IOException e) {
+        //this should post the date to my server
+        Response response = client.newCall(request).execute();
+        if(response.code() == 400)
+            return false;
 
-                    }
-
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        //once complete I want to do nothing
-                    }
-                });
+        return true;
     }
 
     private void logUserIn(User user) {
@@ -230,72 +213,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         userLocalStore.SetUserLoggedIn(true);
         startActivity(new Intent(this, MainActivity.class));
     }
-
-    private boolean checkPlayServices() {
-        GoogleApiAvailability api = GoogleApiAvailability.getInstance();
-        int resultCode = api.isGooglePlayServicesAvailable(this);
-        if (resultCode != ConnectionResult.SUCCESS) {
-
-            if (api.isUserResolvableError(resultCode)) {
-                api.getErrorDialog(this, resultCode,
-                        PLAY_SERVICES_RESOLUTION_REQUEST).show();
-            } else {
-                Log.d(TAG, "This device is not supported - Google Play Services.");
-                finish();
-            }
-            return false;
-        }
-        return true;
-    }
-
-    private String getRegistrationId(Context context)
-    {
-        final SharedPreferences prefs = getGCMPreferences(context);
-        String registrationId = prefs.getString(PROPERTY_REG_ID, "");
-        if (registrationId.isEmpty()) {
-            Log.d(TAG, "Registration ID not found.");
-            return "";
-        }
-        int registeredVersion = prefs.getInt(PROPERTY_APP_VERSION, Integer.MIN_VALUE);
-        int currentVersion = getAppVersion(context);
-        if (registeredVersion != currentVersion) {
-            Log.d(TAG, "App version changed.");
-            return "";
-        }
-        return registrationId;
-    }
-
-    private SharedPreferences getGCMPreferences(Context context)
-    {
-        return getSharedPreferences(MainActivity.class.getSimpleName(),
-                Context.MODE_PRIVATE);
-    }
-
-    private static int getAppVersion(Context context)
-    {
-        try
-        {
-            PackageInfo packageInfo = context.getPackageManager()
-                    .getPackageInfo(context.getPackageName(), 0);
-            return packageInfo.versionCode;
-        }
-        catch (PackageManager.NameNotFoundException e)
-        {
-            throw new RuntimeException("Could not get package name: " + e);
-        }
-    }
-
-    private void registerInBackground(){
-
-        String msg = "";
-        try {
-            if(gcm == null){
-                gcm = GoogleCloudMessaging.getInstance(context);
-            }
-            regid = gcm.register(SENDER_ID);
-        }
-        catch (IOException e) {
-            msg = "Error :" + e.getMessage();
-        }
-    }
 }
+
+
+
+
+
+
+
+
+

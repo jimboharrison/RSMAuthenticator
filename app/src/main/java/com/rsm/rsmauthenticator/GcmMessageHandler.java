@@ -8,16 +8,17 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 
 public class GcmMessageHandler extends GcmListenerService {
-    public static final int MESSAGE_NOTIFICATION_ID = 435345;
+    public static final int MESSAGE_NOTIFICATION_ID = 123456;
 
     @Override
     public void onMessageReceived(String from, Bundle data) {
-        String message = data.getString("message");
+        String otp = data.getString("otp");
+        String userFullName = data.getString("username");
         String notificationTitle = "Acesss request for User";
-        createNotification(from, message, notificationTitle);
+        createNotification(from, otp, notificationTitle);
     }
 
-    // Creates notification based on title and body received
+    // this method will create a notification from the message recieved
     private void createNotification(String from, String body, String notificationTitle) {
         Context context = getBaseContext();
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)

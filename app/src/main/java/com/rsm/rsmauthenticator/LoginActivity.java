@@ -3,6 +3,7 @@ package com.rsm.rsmauthenticator;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -39,7 +40,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     String name, email, pass;
     Integer userId;
     String PROJECT_NUMBER = "540327761504";
-    String serverApiHost = "40.87.151.116";
+    String serverApiHost = "40.127.172.20";
     GCMClientManager pushClientManager;
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -173,6 +174,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         try {
             jsonObject.put("UserId", userId);
             jsonObject.put("RegId", registrationId);
+            jsonObject.put("DeviceDescription", Build.MANUFACTURER + " " + Build.MODEL);
         } catch (JSONException e) {
             e.printStackTrace();
         }

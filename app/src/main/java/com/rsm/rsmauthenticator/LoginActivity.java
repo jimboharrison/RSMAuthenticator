@@ -40,7 +40,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     String name, email, pass;
     Integer userId;
     String PROJECT_NUMBER = "540327761504";
-    String serverApiHost = "40.127.172.20";
+    String serverApiHost = "13.70.201.14";
     GCMClientManager pushClientManager;
 
     protected void onCreate(Bundle savedInstanceState) {

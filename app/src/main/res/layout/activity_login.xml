@@ -4,7 +4,8 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:weightSum="1">
+    android:weightSum="1"
+    android:background="#B9B9B9">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -22,12 +23,25 @@
 
     <LinearLayout
         android:orientation="vertical"
+        android:gravity="center"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_margin="10dp">
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="50dp"
+        android:background="#fff"
+        android:weightSum="1">
+
+    <ImageView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:scaleType="center"
+        android:layout_marginTop="10dp"
+        android:src="@drawable/rsminternationallogo"
+         />
 
     <TextView
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="10dp"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
         android:text="Email"
@@ -57,21 +71,25 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <TextView
-        android:text="Warning! By clicking login you will disable any other mobile device on your account."
-        android:textSize="11dp"
-        android:textAlignment="center"
-        android:layout_marginTop="10dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
     <Button
         android:id="@+id/btLogin"
         android:paddingLeft="50dp"
         android:paddingRight="50dp"
+        android:layout_margin="10dp"
         android:text="Login"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
 </LinearLayout>
+
+    <TextView
+        android:text="Warning! By clicking login you will disable any other mobile device on your account."
+        android:textSize="11dp"
+        android:textAlignment="center"
+        android:layout_margin="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#fff"/>
 </LinearLayout>

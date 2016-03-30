@@ -87,10 +87,12 @@
             android:orientation="horizontal">
 
             <Button
+                android:id="@+id/btnApproveRequest"
                 android:layout_width="170dp"
                 android:layout_height="wrap_content"
                 android:text="Approve"/>
             <Button
+                android:id="@+id/btnDeclineRequest"
                 android:layout_width="170dp"
                 android:layout_height="wrap_content"
                 android:text="Decline"/>

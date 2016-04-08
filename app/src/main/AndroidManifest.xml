@@ -60,6 +60,10 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name=".MobileResponseService"
+            android:exported="false"/>
+
         <activity
             android:name=".AccessRequestActivity"
             android:label="@string/title_activity_access_request"

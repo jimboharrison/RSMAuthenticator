@@ -89,9 +89,11 @@ public class AccessResponseActivity extends AppCompatActivity implements View.On
         switch(v.getId()){
             case R.id.btnApproveRequest:
                 SendResponse(2);
+                break;
 
             case R.id.btnDeclineRequest:
                 SendResponse(1);
+                break;
         }
     }
 

@@ -26,6 +26,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -34,6 +35,10 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -75,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onStart();
 
         if(authenticateUser() == true){
-            //getActiveRequests();
+            getActiveRequests();
         }else{
             startActivity(new Intent(this, LoginActivity.class));
         }
@@ -103,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-/*    public Object getActiveRequests() {
+  public Object getActiveRequests() {
         HttpUrl url = new HttpUrl.Builder()
                 .scheme("http")
                 .host(serverApiHost)
@@ -140,13 +145,72 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        //need to parse the jsonarray and put into a list of objects that can be displayed
-                        for(int i = 0 ; i< jsonArray.length(); i++){
 
+                        ArrayList<AccessRequest> ItemList = new ArrayList<AccessRequest>();
+                        Gson gson = new Gson();
+
+                        try {
+                            String jsonString2 = jsonArray.get(0).toString();
+                            JsonElement element2 = gson.fromJson(jsonString2, JsonElement.class);
+                            JsonObject jsonObject2 = element2.getAsJsonObject();
+
+                            int requestId = jsonObject2.get("RequestId").getAsInt();
+                            String requestTime = jsonObject2.get("RequestTime").getAsString();
+                            String otp = jsonObject2.get("Otp").getAsString();
+                            String appName = jsonObject2.get("AppName").getAsString();
+                            boolean isAwaitingResponse = jsonObject2.get("IsAwaitingResponse").getAsBoolean();
+
+                            AccessRequest request = new AccessRequest(requestId, requestTime, otp, appName, isAwaitingResponse);
+
+                            ItemList.add(request);
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
+
+                        if(jsonArray != null){
+                            //need to parse the jsonarray and put into a list of objects that can be displayed
+                            for(int i = 0 ; i< jsonArray.length(); i++){
+                                try {
+                                    String jsonString = jsonArray.get(i).toString();
+                                    JsonElement element = gson.fromJson(jsonString, JsonElement.class);
+                                    JsonObject jsonObject = element.getAsJsonObject();
+
+                                    int requestId = jsonObject.get("RequestId").getAsInt();
+                                    String requestTime = jsonObject.get("RequestTime").getAsString();
+                                    String otp = jsonObject.get("Otp").getAsString();
+                                    String appName = jsonObject.get("AppName").getAsString();
+                                    boolean isAwaitingResponse = jsonObject.get("IsAwaitingResponse").getAsBoolean();
+
+                                    AccessRequest request = new AccessRequest(requestId, requestTime, otp, appName, isAwaitingResponse);
+
+                                    ItemList.add(request);
+
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+
                     }
                 });
 
         return activeRequests;
-    }*/
+    }
+
+    public class AccessRequest{
+        public int RequestId;
+        public String RequestTime;
+        public String Otp;
+        public String AppName;
+        public Boolean IsAwaitingResponse;
+
+        public AccessRequest(int id, String time, String otp, String appname, boolean isAwait){
+            this.RequestId = id;
+            this.RequestTime = time;
+            this.Otp = otp;
+            this.AppName = appname;
+            this.IsAwaitingResponse = isAwait;
+        }
+    }
 }

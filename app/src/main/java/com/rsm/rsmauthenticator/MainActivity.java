@@ -12,7 +12,11 @@ import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +31,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -50,18 +55,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TelephonyManager telephonyManager;
     OkHttpClient client;
     JSONArray jsonArray;
-
-
+    ArrayList<AccessRequest> ItemList;
+    ListView listView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         userLocalStore = new UserLocalStore(this);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+
+        ItemList = new ArrayList<AccessRequest>();
+        listView = (ListView) findViewById(R.id.arListView);
+
         TextView tvUserName = (TextView) findViewById(R.id.userName);
         TextView tvUserEmail = (TextView) findViewById(R.id.userEmail);
         client = new OkHttpClient();
@@ -107,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
   public Object getActiveRequests() {
         HttpUrl url = new HttpUrl.Builder()
                 .scheme("http")
@@ -146,31 +153,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             e.printStackTrace();
                         }
 
-                        ArrayList<AccessRequest> ItemList = new ArrayList<AccessRequest>();
+                        ItemList.clear();
                         Gson gson = new Gson();
 
-                        try {
-                            String jsonString2 = jsonArray.get(0).toString();
-                            JsonElement element2 = gson.fromJson(jsonString2, JsonElement.class);
-                            JsonObject jsonObject2 = element2.getAsJsonObject();
-
-                            int requestId = jsonObject2.get("RequestId").getAsInt();
-                            String requestTime = jsonObject2.get("RequestTime").getAsString();
-                            String otp = jsonObject2.get("Otp").getAsString();
-                            String appName = jsonObject2.get("AppName").getAsString();
-                            boolean isAwaitingResponse = jsonObject2.get("IsAwaitingResponse").getAsBoolean();
-
-                            AccessRequest request = new AccessRequest(requestId, requestTime, otp, appName, isAwaitingResponse);
-
-                            ItemList.add(request);
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                        if(jsonArray != null){
+                        if (jsonArray != null) {
                             //need to parse the jsonarray and put into a list of objects that can be displayed
-                            for(int i = 0 ; i< jsonArray.length(); i++){
+                            for (int i = 0; i < jsonArray.length(); i++) {
                                 try {
                                     String jsonString = jsonArray.get(i).toString();
                                     JsonElement element = gson.fromJson(jsonString, JsonElement.class);
@@ -191,12 +179,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 }
                             }
                         }
-
                     }
                 });
 
         return activeRequests;
     }
+
 
     public class AccessRequest{
         public int RequestId;
@@ -211,6 +199,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             this.Otp = otp;
             this.AppName = appname;
             this.IsAwaitingResponse = isAwait;
+        }
+
+        public String toString(){
+            return this.AppName + ": " + this.Otp  + " " + this.RequestTime;
         }
     }
 }

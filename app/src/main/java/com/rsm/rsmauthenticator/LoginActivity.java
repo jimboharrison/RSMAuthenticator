@@ -47,8 +47,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-            Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar);
-            setSupportActionBar(myToolbar);
+            /*Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar);
+            setSupportActionBar(myToolbar);*/
 
             telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
             client = new OkHttpClient();

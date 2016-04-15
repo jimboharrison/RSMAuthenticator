@@ -16,24 +16,28 @@ import java.util.Random;
 
 public class GcmMessageHandler extends GcmListenerService {
     public static final int notification_Id = 123456;
+    UserLocalStore userLocalStore;
 
     @Override
     public void onMessageReceived(String from, Bundle data) {
-        String otp = data.getString("otp");
-        String time = data.getString("time");
-        String userFullName = data.getString("username");
-        String appName = data.getString("app");
-        String method = data.getString("method");
-        String requestId = data.getString("id");
+        userLocalStore = new UserLocalStore(this);
 
-        String notificationTitle = "RSM Authentication";
+        if (userLocalStore.IsUserLoggedIn()){//only notify the user if they are logged in.
+            String otp = data.getString("otp");
+            String time = data.getString("time");
+            String userFullName = data.getString("username");
+            String appName = data.getString("app");
+            String method = data.getString("method");
+            String requestId = data.getString("id");
 
-        if(method.equals("OneTimePasscode")){
-            createNotification(from, otp, time, userFullName, appName, notificationTitle, method, requestId);
-        }else if (method.equals("PushNotification")){
-            createHeadsUpNotification(from, otp, time, userFullName, appName, notificationTitle, requestId);
+            String notificationTitle = "RSM Authentication";
+
+            if(method.equals("OneTimePasscode")){
+                createNotification(from, otp, time, userFullName, appName, notificationTitle, method, requestId);
+            }else if (method.equals("PushNotification")){
+                createHeadsUpNotification(from, otp, time, userFullName, appName, notificationTitle, requestId);
+            }
         }
-
     }
 
     // this method will create a notification from the message recieved

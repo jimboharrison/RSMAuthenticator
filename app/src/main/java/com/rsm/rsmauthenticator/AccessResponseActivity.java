@@ -37,8 +37,8 @@ import okhttp3.Response;
 
 public class AccessResponseActivity extends AppCompatActivity implements View.OnClickListener {
 
-    Button btApproveRequest, btDeclineRequest;
-    String serverApiHost = "52.169.154.122";
+    Button btApproveRequest, btDeclineRequest, btHome;
+    String serverApiHost = "jh-devserver.cloudapp.net";
     String otp, requestTime, username, appName, requestId;
     OkHttpClient client;
     UserLocalStore localStore;
@@ -74,6 +74,7 @@ public class AccessResponseActivity extends AppCompatActivity implements View.On
 
         btApproveRequest = (Button) findViewById(R.id.btnApproveRequest);
         btDeclineRequest = (Button) findViewById(R.id.btnDeclineRequest);
+        btHome = (Button) findViewById(R.id.btHome);
 
         tvUsername.setText(username);
         tvApp.setText(appName);
@@ -82,6 +83,7 @@ public class AccessResponseActivity extends AppCompatActivity implements View.On
 
         btApproveRequest.setOnClickListener(this);
         btDeclineRequest.setOnClickListener(this);
+        btHome.setOnClickListener(this);
     }
 
     @Override
@@ -93,6 +95,10 @@ public class AccessResponseActivity extends AppCompatActivity implements View.On
 
             case R.id.btnDeclineRequest:
                 SendResponse(1);
+                break;
+
+            case R.id.btHome:
+                startActivity(new Intent(this, MainActivity.class));
                 break;
         }
     }

@@ -2,36 +2,23 @@ package com.rsm.rsmauthenticator;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.os.AsyncTask;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.logging.Handler;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -41,22 +28,26 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     Button btLogout;
     UserLocalStore userLocalStore;
-    String username, userEmail;
+    String username;
+    String userEmail;
+    String recentAppName;
+    String recentRequestTime;
+    String isExpired;
+    String Otp;
+    Boolean IsAwaitingResponse;
+    int RequestId;
     private Object activeRequests;
-    String serverApiHost = "52.169.154.122";
+    String serverApiHost = "jh-devserver.cloudapp.net";
     TelephonyManager telephonyManager;
     OkHttpClient client;
-    JSONArray jsonArray;
-    ArrayList<AccessRequest> ItemList;
-    ListView listView;
+    TextView tvRecentAppName, tvRecentRequestTime, tvIsExpired;
+    LinearLayout recentRequest;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,11 +58,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         userLocalStore = new UserLocalStore(this);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
-        ItemList = new ArrayList<AccessRequest>();
-        listView = (ListView) findViewById(R.id.arListView);
-
         TextView tvUserName = (TextView) findViewById(R.id.userName);
         TextView tvUserEmail = (TextView) findViewById(R.id.userEmail);
+
+        recentRequest = (LinearLayout) findViewById(R.id.recentRequest);
+
+        tvRecentAppName = (TextView) findViewById(R.id.recentAppName);
+        tvRecentRequestTime = (TextView) findViewById(R.id.recentRequestTime);
+        tvIsExpired = (TextView) findViewById(R.id.isExpired);
+
         client = new OkHttpClient();
         username = userLocalStore.getLoggedInUser().name;
         userEmail = userLocalStore.getLoggedInUser().email;
@@ -81,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         btLogout = (Button) findViewById(R.id.btLogout);
         btLogout.setOnClickListener(this);
+        recentRequest.setOnClickListener(this);
     }
 
     @Override
@@ -112,6 +108,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
                 break;
+            case R.id.recentRequest:
+                if(IsAwaitingResponse != null){
+                    if(IsAwaitingResponse){
+                        Intent intent = new Intent(this, AccessResponseActivity.class);
+                        intent.putExtra("otp", Otp);
+                        intent.putExtra("appName", recentAppName);
+                        intent.putExtra("requestTime", recentRequestTime);
+                        intent.putExtra("requestId", Integer.toString(RequestId));
+                        intent.putExtra("username", userLocalStore.getLoggedInUser().name);
+                        startActivity(intent);
+                    }else
+                    {
+                        Intent intent = new Intent(this, AccessRequestActivity.class);
+                        intent.putExtra("otp", Otp);
+                        intent.putExtra("appName", recentAppName);
+                        intent.putExtra("requestTime", recentRequestTime);
+                        intent.putExtra("username", userLocalStore.getLoggedInUser().name);
+                        startActivity(intent);
+                    }
+                }
+
+                break;
         }
     }
 
@@ -137,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         client.newCall(request)
                 .enqueue(new Callback() {
+
                     @Override
                     public void onFailure(Call call, IOException e) {
                         String hello = "failed call";
@@ -145,39 +164,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
                         final String responseData = response.body().string();
-                        final int responseCode = response.code();
 
-                        try {
-                            jsonArray = new JSONArray(responseData);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                        if (!responseData.equals("null")) {
+                            Gson gson = new Gson();
+                            JsonElement element = gson.fromJson(responseData, JsonElement.class);
+                            JsonObject jsonObject = element.getAsJsonObject();
+                            AccessRequest request = gson.fromJson(jsonObject, AccessRequest.class);
+                            IsAwaitingResponse = request.IsAwaitingResponse;
+                            Otp = request.Otp;
+                            RequestId = request.RequestId;
+                            recentAppName = request.AppName.toString();
+                            recentRequestTime = request.RequestTime.toString();
+                            if (request.IsExpired)
+                                isExpired = "Has Expired";
+                            else isExpired = "Active";
 
-                        ItemList.clear();
-                        Gson gson = new Gson();
-
-                        if (jsonArray != null) {
-                            //need to parse the jsonarray and put into a list of objects that can be displayed
-                            for (int i = 0; i < jsonArray.length(); i++) {
-                                try {
-                                    String jsonString = jsonArray.get(i).toString();
-                                    JsonElement element = gson.fromJson(jsonString, JsonElement.class);
-                                    JsonObject jsonObject = element.getAsJsonObject();
-
-                                    int requestId = jsonObject.get("RequestId").getAsInt();
-                                    String requestTime = jsonObject.get("RequestTime").getAsString();
-                                    String otp = jsonObject.get("Otp").getAsString();
-                                    String appName = jsonObject.get("AppName").getAsString();
-                                    boolean isAwaitingResponse = jsonObject.get("IsAwaitingResponse").getAsBoolean();
-
-                                    AccessRequest request = new AccessRequest(requestId, requestTime, otp, appName, isAwaitingResponse);
-
-                                    ItemList.add(request);
-
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
+                            MainActivity.this.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    tvRecentAppName.setText(recentAppName);
+                                    tvRecentRequestTime.setText(recentRequestTime);
+                                    tvIsExpired.setText(isExpired);
                                 }
-                            }
+                            });
                         }
                     }
                 });
@@ -186,23 +195,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    public class AccessRequest{
-        public int RequestId;
-        public String RequestTime;
-        public String Otp;
-        public String AppName;
-        public Boolean IsAwaitingResponse;
-
-        public AccessRequest(int id, String time, String otp, String appname, boolean isAwait){
-            this.RequestId = id;
-            this.RequestTime = time;
-            this.Otp = otp;
-            this.AppName = appname;
-            this.IsAwaitingResponse = isAwait;
-        }
-
-        public String toString(){
-            return this.AppName + ": " + this.Otp  + " " + this.RequestTime;
-        }
-    }
 }

@@ -90,10 +90,14 @@
                 android:id="@+id/btnApproveRequest"
                 android:layout_width="170dp"
                 android:layout_height="wrap_content"
+                android:background="#56c880"
+                android:textColor="#fff"
                 android:text="Approve"/>
             <Button
                 android:id="@+id/btnDeclineRequest"
                 android:layout_width="170dp"
+                android:background="#58595C"
+                android:textColor="#fff"
                 android:layout_height="wrap_content"
                 android:text="Decline"/>
 
@@ -106,6 +110,23 @@
             android:layout_height="3dp"
             android:layout_marginTop="20dp"
             android:background="@android:color/darker_gray"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="bottom">
+
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Home"
+            android:id="@+id/btHome"
+            android:background="#56c880"
+            android:textColor="#fff"
+            android:layout_gravity="center_horizontal|bottom" />
 
     </LinearLayout>
 

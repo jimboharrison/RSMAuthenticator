@@ -64,15 +64,67 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
             android:layout_gravity="left"
-            android:text="Active Requests: "
+            android:text="Most Recent Request: "
             android:textSize="10pt"
             android:textColor="#707175"
             />
 
-        <ListView
+        <LinearLayout
+            android:id="@+id/recentRequest"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/arListView" />
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_margin="5dp"
+            android:paddingTop="10dp">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:background="@android:color/darker_gray"/>
+
+            <TextView
+                android:id="@+id/recentAppName"
+                android:clickable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:layout_marginLeft="10dp"
+                android:layout_gravity="left"
+                android:textSize="8pt"
+                android:layout_marginBottom="3dp"
+                android:textColor="#707175"
+                />
+
+            <TextView
+                android:id="@+id/recentRequestTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginBottom="3dp"
+                android:layout_marginTop="4dp"
+                android:layout_gravity="left"
+                android:textSize="8pt"
+                android:textColor="#707175"
+                />
+
+            <TextView
+                android:id="@+id/isExpired"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_gravity="left"
+                android:textSize="8pt"
+                android:layout_marginBottom="4dp"
+                android:textColor="#707175"
+                />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:background="@android:color/darker_gray"/>
+
+
+        </LinearLayout>
 
     </LinearLayout>
 

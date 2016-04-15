@@ -28,7 +28,7 @@ public class MobileResponseService extends IntentService {
 
     public static final String ApproveAction = "Approve";
     public static final String DeclineAction = "Decline";
-    public static final String serverApiHost = "52.169.154.122";
+    public static final String serverApiHost = "jh-devserver.cloudapp.net";
     String otp, requestTime, username, appName, requestId;
     OkHttpClient client;
     UserLocalStore localStore;

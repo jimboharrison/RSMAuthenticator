@@ -33,8 +33,11 @@ public class AccessRequestActivity extends AppCompatActivity implements View.OnC
         String appName = myIntent.getStringExtra("appName");
         String notificationId = myIntent.getStringExtra("notificationId");
         String ns = Context.NOTIFICATION_SERVICE;
-        NotificationManager nMgr = (NotificationManager) this.getSystemService(ns);
-        nMgr.cancel(Integer.parseInt(notificationId));
+
+        if (notificationId != null && !notificationId.isEmpty()) {
+            NotificationManager nMgr = (NotificationManager) this.getSystemService(ns);
+            nMgr.cancel(Integer.parseInt(notificationId));
+        }
 
         SimpleDateFormat format = new SimpleDateFormat("MMM EEE dd HH:mm:ss zzz yyyy");
 
